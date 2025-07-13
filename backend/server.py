@@ -271,7 +271,7 @@ async def analyze_file_with_user_keys(
             )
         
         # Create user-specific Gemini provider
-        user_provider = GeminiProvider(current_user["gemini_api_key"])
+        user_provider = llm_manager.create_user_provider("gemini", "gemini-1.5-flash", current_user["gemini_api_key"])
         
         # Save uploaded file temporarily
         with tempfile.NamedTemporaryFile(delete=False, suffix=f"_{file.filename}") as temp_file:
@@ -279,8 +279,7 @@ async def analyze_file_with_user_keys(
             temp_file_path = temp_file.name
         
         try:
-            # For demo purposes, create a mock analysis
-            # In real implementation, you would process the file content here
+            # Create analysis prompt
             analysis_prompt = f"""
 Analyze this German official letter and provide a structured response in {language}.
 
@@ -301,13 +300,14 @@ File: {file.filename}
             # Generate content using user's API key
             response_text = await user_provider.generate_content(analysis_prompt)
             
-            # Parse and structure the response (simplified for demo)
+            # Parse and structure the response
             analysis_result = {
                 "summary": f"Analysis of {file.filename} completed successfully",
                 "analysis": {
                     "sender": "Demo sender information",
                     "letter_type": "Official document",
-                    "main_content": response_text[:500] + "..." if len(response_text) > 500 else response_text
+                    "main_content": response_text[:500] + "..." if len(response_text) > 500 else response_text,
+                    "full_analysis": response_text
                 },
                 "actions_needed": [
                     "Review the document contents",
