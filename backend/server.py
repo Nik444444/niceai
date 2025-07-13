@@ -18,7 +18,7 @@ from google.auth.transport import requests
 from google.oauth2 import id_token
 
 # Load LLM Manager
-from llm_manager import llm_manager, GeminiProvider
+from llm_manager import llm_manager
 
 ROOT_DIR = Path(__file__).parent
 load_dotenv(ROOT_DIR / '.env')
