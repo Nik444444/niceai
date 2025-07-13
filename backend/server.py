@@ -349,49 +349,8 @@ async def analyze_file_public(
             # Check if file is an image
             is_image = file.content_type and file.content_type.startswith('image/')
             
-            if is_image:
-                # For images, use vision-enabled prompt
-                analysis_prompt = f"""
-Analyze this German official letter image and provide a structured response in {language}.
-
-Please provide:
-1. Brief summary
-2. Sender information
-3. Letter type
-4. Main content
-5. Required actions
-6. Important deadlines
-7. Consequences if no action taken
-8. Urgency level (LOW/MEDIUM/HIGH)
-9. Response template if needed
-
-Image file: {file.filename}
-"""
-                
-                # Use Gemini for image analysis
-                response_text = None
-                provider_used = "None"
-                
-                # Try to get Gemini provider for image analysis
-                for provider in llm_manager.providers:
-                    if provider.name == "Gemini" and provider.can_make_request():
-                        try:
-                            provider.record_request()
-                            response_text = await provider.generate_content(analysis_prompt, temp_file_path)
-                            provider.record_success()
-                            provider_used = provider.name
-                            break
-                        except Exception as e:
-                            provider.record_error(str(e))
-                            logger.warning(f"Provider {provider.name} failed: {e}")
-                            continue
-                
-                if not response_text:
-                    raise HTTPException(status_code=500, detail="No vision-capable providers available for image analysis")
-                
-            else:
-                # For text/PDF files, use regular text prompt
-                analysis_prompt = f"""
+            # Create analysis prompt
+            analysis_prompt = f"""
 Analyze this German official letter and provide a structured response in {language}.
 
 Please provide:
@@ -406,12 +365,13 @@ Please provide:
 9. Response template if needed
 
 File: {file.filename}
+Type: {"Image" if is_image else "Document"}
 """
-                
-                # Generate content using system providers
-                response_text, provider_used = await llm_manager.generate_content(analysis_prompt)
             
-            # Parse and structure the response (simplified for demo)
+            # Generate content using system providers
+            response_text, provider_used = await llm_manager.generate_content(analysis_prompt, temp_file_path if is_image else None)
+            
+            # Parse and structure the response
             analysis_result = {
                 "summary": f"Analysis of {file.filename} completed using system providers",
                 "analysis": {
