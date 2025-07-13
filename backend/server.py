@@ -216,7 +216,7 @@ async def save_gemini_api_key(
 ):
     try:
         # Validate the API key by testing it
-        test_provider = GeminiProvider(api_key_data.gemini_api_key)
+        test_provider = llm_manager.create_user_provider("gemini", "gemini-1.5-flash", api_key_data.gemini_api_key)
         
         # Test the key with a simple prompt
         try:
